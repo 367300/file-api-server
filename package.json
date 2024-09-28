@@ -1,0 +1,28 @@
+{
+  "name": "file-api-server",
+  "version": "0.0.1",
+  "description": "file server for matroyshka",
+  "main": "",
+  "scripts": {
+    "docker:build": "docker build -t file-api-serverd .",
+    "docker": "docker run -d -p 8085:8085 --name file-api-serverd file-api-serverd",
+    "docker:stop": "docker stop file-api-serverd",
+    "docker:rm": "docker rm file-api-serverd",
+    "docker:init": "npm run docker:build && npm run docker",
+    "build": "$env:GOOS='linux'; $env:GOARCH='amd64'; go build -o main"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/367300/file-api-server.git"
+  },
+  "keywords": [
+    "server",
+    "file"
+  ],
+  "author": "Vyacheslav L",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/367300/file-api-server/issues"
+  },
+  "homepage": "https://github.com/367300/file-api-server#readme"
+}
