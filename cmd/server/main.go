@@ -10,12 +10,15 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 var (
 	addr      string
 	pathfiles string
 )
+var secretKey = []byte("your-256-bit-secret")
 
 func main() {
 	flag.StringVar(&addr, "addr", "", "адрес и порт сервера (в формате server:port)")
@@ -120,8 +123,21 @@ func main() {
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the multipart form
-	if err := r.ParseMultipartForm(10000 << 20); err != nil {
-		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+	// if err := r.ParseMultipartForm(10000 << 20); err != nil {
+	// 	http.Error(w, "Unable to parse form", http.StatusBadRequest)
+	// 	return
+	// }
+
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+		return
+	}
+
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	token, err := validateToken(tokenString)
+	if err != nil || !token.Valid {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
 		return
 	}
 
@@ -169,4 +185,14 @@ func serveAvatar(w http.ResponseWriter, r *http.Request) {
 	filepath := r.URL.Path // Map /avatars/filename to ./avatars/filename
 	filepath = strings.Replace(filepath, "/get/", "/", 1)
 	http.ServeFile(w, r, filepath)
+}
+
+func validateToken(tokenString string) (*jwt.Token, error) {
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Don't forget to validate the alg is what you expect:
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return secretKey, nil
+	})
 }
